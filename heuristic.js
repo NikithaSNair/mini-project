@@ -63,7 +63,5 @@ function getRiskLevel(score) {
 
 }
 
-module.exports = {
-    calculateRisk,
-    getRiskLevel
-};
+export { calculateRisk, getRiskLevel };
+
