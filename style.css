@@ -1,0 +1,267 @@
+/* General Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 400px;
+  min-height: 500px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.container {
+  background: white;
+  margin: 0;
+  padding: 0;
+}
+
+/* Header Section */
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 25px 20px;
+  text-align: center;
+}
+
+.logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+  background: white;
+  padding: 5px;
+}
+
+.header h1 {
+  font-size: 28px;
+  margin: 10px 0 5px 0;
+  font-weight: 600;
+}
+
+.tagline {
+  font-size: 13px;
+  opacity: 0.9;
+  margin-top: 5px;
+}
+
+/* Status Section */
+.status-section {
+  padding: 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ccc;
+}
+
+.status-dot.active {
+  background: #4CAF50;
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(76, 175, 80, 0);
+  }
+}
+
+.status-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Statistics Section */
+.stats-section {
+  padding: 20px;
+}
+
+.stats-section h3 {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.stat-number {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 12px;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+/* Current Page Section */
+.current-page-section {
+  padding: 20px;
+  background: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.current-page-section h3 {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+#currentPageAnalysis {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.loading {
+  color: #666;
+  font-size: 13px;
+  text-align: center;
+}
+
+.page-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-result-icon {
+  font-size: 24px;
+}
+
+.page-result-info {
+  flex: 1;
+}
+
+.page-result-status {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.page-result-status.safe { color: #4CAF50; }
+.page-result-status.suspicious { color: #FFC107; }
+.page-result-status.danger { color: #F44336; }
+
+.page-result-score {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Actions Section */
+.actions-section {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.action-btn.secondary {
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+.action-btn.secondary:hover {
+  background: #f8f9ff;
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+/* Footer */
+.footer {
+  padding: 15px 20px;
+  background: #f8f9fa;
+  text-align: center;
+  border-top: 1px solid #e0e0e0;
+}
+
+.footer p {
+  font-size: 11px;
+  color: #666;
+  margin: 3px 0;
+}
+
+.team-info {
+  font-size: 10px;
+  color: #999;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.container > * {
+  animation: fadeIn 0.5s ease-out;
+}

@@ -1,18 +1,67 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Phishing and malicious script detector</title>
+  <meta charset="UTF-8">
+  <title>NoPhish - Phishing Detector</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h4>NoPhish</h4>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <img src="logo.png" alt="NoPhish Logo" class="logo">
+      <h1>NoPhish</h1>
+      <p class="tagline">AI-Powered Phishing Protection</p>
+    </div>
 
-  <div class="input-box">
-    <input id="Input" type="text" placeholder="...">
+    <!-- Status Section -->
+    <div class="status-section">
+      <div class="status-indicator" id="statusIndicator">
+        <span class="status-dot active"></span>
+        <span class="status-text">Protection Active</span>
+      </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="stats-section">
+      <h3>Protection Statistics</h3>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="totalScans">0</div>
+          <div class="stat-label">Sites Scanned</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="threatsBlocked">0</div>
+          <div class="stat-label">Threats Detected</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Current Page Analysis -->
+    <div class="current-page-section">
+      <h3>Current Page</h3>
+      <div id="currentPageAnalysis">
+        <p class="loading">Analyzing current page...</p>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="actions-section">
+      <button id="scanButton" class="action-btn primary">
+        🔍 Scan Current Page
+      </button>
+      <button id="reportButton" class="action-btn secondary">
+        🚩 Report Phishing Site
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>Protected by NoPhish v1.0</p>
+      <p class="team-info">Team: Nikitha, Aditya, Anjum, Aparna</p>
+    </div>
   </div>
 
-  <ul id="todoList"></ul>
-
-  <script src="script.js"></script>
+  <script src="popup.js"></script>
 </body>
 </html>
