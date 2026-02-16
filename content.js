@@ -290,13 +290,13 @@ function showWarningPopup(threatData) {
 }
 
 // ============================================
-// HELPER FUNCTIONS (Include heuristic.js and ml_model.js functions here)
+// HELPER FUNCTIONS - ANJUM'S HEURISTIC CODE (integrated from her push)
 // ============================================
 
-// Since we can't import JS files in content scripts easily,
-// we include the essential functions here
-
-// Copy the analyzeURL function from heuristic.js
+/**
+ * ANJUM'S FUNCTION: Analyzes URL for phishing indicators
+ * This uses heuristic rules to detect suspicious URLs
+ */
 function analyzeURL(url) {
   let score = 0;
   let features = {};
@@ -304,30 +304,31 @@ function analyzeURL(url) {
   try {
     const urlObj = new URL(url);
     
-    // URL length check
+    // Feature 1: URL length check
     features.urlLength = url.length;
     if (url.length > 75) {
       score += 10;
       features.longURL = true;
     }
     
-    // IP address check
+    // Feature 2: IP address check (phishing sites often use IPs)
     const ipPattern = /^https?:\/\/(\d{1,3}\.){3}\d{1,3}/;
     if (ipPattern.test(url)) {
       score += 30;
       features.hasIP = true;
     }
     
-    // @ symbol check
+    // Feature 3: @ symbol check (hides real domain)
     if (url.includes('@')) {
       score += 20;
       features.hasAtSymbol = true;
     }
     
-    // Suspicious keywords
+    // Feature 4: Suspicious keywords check
     const suspiciousKeywords = [
       'verify', 'account', 'update', 'confirm', 'login', 
-      'bank', 'secure', 'suspended', 'locked', 'unusual'
+      'bank', 'secure', 'suspended', 'locked', 'unusual',
+      'paypal', 'amazon', 'apple', 'microsoft', 'netflix'
     ];
     
     let keywordCount = 0;
@@ -342,21 +343,32 @@ function analyzeURL(url) {
       features.suspiciousKeywords = keywordCount;
     }
     
-    // Subdomain check
+    // Feature 5: Excessive subdomains check
     const subdomains = urlObj.hostname.split('.');
     if (subdomains.length > 3) {
       score += 15;
       features.excessiveSubdomains = true;
     }
     
-    // HTTPS check
+    // Feature 6: HTTPS check (legitimate sites use HTTPS)
     if (urlObj.protocol !== 'https:') {
       score += 20;
       features.noHTTPS = true;
     }
     
+    // Feature 7: Dash/underscore check
+    const hostname = urlObj.hostname;
+    const dashCount = (hostname.match(/-/g) || []).length;
+    const underscoreCount = (hostname.match(/_/g) || []).length;
+    if (dashCount > 3 || underscoreCount > 2) {
+      score += 10;
+      features.excessiveSeparators = true;
+    }
+    
+    // Cap score at 100
     score = Math.min(score, 100);
     
+    // Determine risk level
     let risk;
     if (score < 30) risk = 'safe';
     else if (score < 60) risk = 'suspicious';
@@ -370,12 +382,19 @@ function analyzeURL(url) {
   }
 }
 
-// Copy the analyzeDOMThreats function from ml_model.js
+// ============================================
+// YOUR FUNCTION (NIKITHA): DOM Threat Detection
+// ============================================
+
+/**
+ * NIKITHA'S FUNCTION: Scans the page DOM for suspicious elements
+ * This is part of your responsibility - detecting threats in the page structure
+ */
 function analyzeDOMThreats() {
   const threats = [];
   let threatScore = 0;
   
-  // Password fields
+  // Check 1: Password fields (medium threat)
   const passwordFields = document.querySelectorAll('input[type="password"]');
   if (passwordFields.length > 0) {
     threats.push({
@@ -387,8 +406,8 @@ function analyzeDOMThreats() {
     threatScore += 20;
   }
   
-  // Hidden forms
-  const hiddenForms = document.querySelectorAll('form[style*="display: none"], form[style*="display:none"]');
+  // Check 2: Hidden forms (high threat - could be stealing data)
+  const hiddenForms = document.querySelectorAll('form[style*="display: none"], form[style*="display:none"], form[hidden]');
   if (hiddenForms.length > 0) {
     threats.push({
       type: 'hidden_form',
@@ -399,7 +418,7 @@ function analyzeDOMThreats() {
     threatScore += 35;
   }
   
-  // External forms
+  // Check 3: Forms submitting to external domains
   const forms = document.querySelectorAll('form[action]');
   let externalForms = 0;
   const currentDomain = window.location.hostname;
@@ -421,7 +440,7 @@ function analyzeDOMThreats() {
     threatScore += 40;
   }
   
-  // Multiple iframes
+  // Check 4: Multiple iframes (possible clickjacking)
   const iframes = document.querySelectorAll('iframe');
   if (iframes.length > 3) {
     threats.push({
@@ -433,6 +452,28 @@ function analyzeDOMThreats() {
     threatScore += 15;
   }
   
+  // Check 5: External scripts from suspicious domains
+  const scripts = document.querySelectorAll('script[src]');
+  let suspiciousScripts = 0;
+  scripts.forEach(script => {
+    const src = script.getAttribute('src');
+    // Check for scripts from unusual TLDs or suspicious patterns
+    if (src && (src.includes('.ru') || src.includes('.cn') || src.includes('unknown') || src.includes('.tk'))) {
+      suspiciousScripts++;
+    }
+  });
+  
+  if (suspiciousScripts > 0) {
+    threats.push({
+      type: 'suspicious_scripts',
+      count: suspiciousScripts,
+      severity: 'high',
+      message: `${suspiciousScripts} script(s) from suspicious domains`
+    });
+    threatScore += 30;
+  }
+  
+  // Cap threat score at 100
   threatScore = Math.min(threatScore, 100);
   
   return {
