@@ -1,13 +1,22 @@
-// popup.js
-// Handles the popup interface logic
+/* ============================================
+   NIKITHA'S FILE - Popup Logic
+   Handles popup interface interactions
+   ============================================ */
 
 console.log('NoPhish popup loaded');
 
 // Load statistics when popup opens
 document.addEventListener('DOMContentLoaded', async () => {
-  await loadStatistics();
-  await analyzeCurrentPage();
-  setupEventListeners();
+  console.log('Popup opened, initializing...');
+  
+  try {
+    await loadStatistics();
+    await analyzeCurrentPage();
+    setupEventListeners();
+    console.log('✓ Popup initialized successfully');
+  } catch (error) {
+    console.error('Error during initialization:', error);
+  }
 });
 
 /**
@@ -15,13 +24,21 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 async function loadStatistics() {
   try {
+    console.log('Loading statistics...');
+    
     // Get statistics from background script
     const response = await chrome.runtime.sendMessage({ action: 'getStats' });
     
     if (response && !response.error) {
-      // Update the display
-      document.getElementById('totalScans').textContent = response.totalScans || 0;
-      document.getElementById('threatsBlocked').textContent = response.threatsDetected || 0;
+      // Animate the numbers
+      animateNumber('totalScans', response.totalScans || 0);
+      animateNumber('threatsBlocked', response.threatsDetected || 0);
+      
+      console.log('✓ Statistics loaded:', response);
+    } else {
+      console.error('Error in stats response:', response);
+      document.getElementById('totalScans').textContent = '0';
+      document.getElementById('threatsBlocked').textContent = '0';
     }
   } catch (error) {
     console.error('Error loading statistics:', error);
@@ -31,26 +48,65 @@ async function loadStatistics() {
 }
 
 /**
+ * Animate number counting up
+ */
+function animateNumber(elementId, targetNumber) {
+  const element = document.getElementById(elementId);
+  const duration = 1000; // 1 second
+  const steps = 20;
+  const increment = targetNumber / steps;
+  let current = 0;
+  let step = 0;
+  
+  const timer = setInterval(() => {
+    step++;
+    current += increment;
+    
+    if (step >= steps) {
+      element.textContent = targetNumber;
+      clearInterval(timer);
+    } else {
+      element.textContent = Math.floor(current);
+    }
+  }, duration / steps);
+}
+
+/**
  * Analyze the current active tab
  */
 async function analyzeCurrentPage() {
   try {
+    console.log('Analyzing current page...');
+    
     // Get current tab
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
     if (!tab || !tab.url) {
       showPageResult('Unable to analyze this page', 'neutral');
+      console.log('No valid tab found');
       return;
     }
     
+    console.log('Current tab URL:', tab.url);
+    
     // Skip chrome:// and extension pages
-    if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
+    if (tab.url.startsWith('chrome://') || 
+        tab.url.startsWith('chrome-extension://') ||
+        tab.url.startsWith('edge://')) {
       showPageResult('System page - no analysis needed', 'neutral');
+      console.log('System page detected, skipping analysis');
+      return;
+    }
+    
+    // Skip new tab pages
+    if (tab.url === 'about:blank' || tab.url.includes('newtab')) {
+      showPageResult('New tab - no content to analyze', 'neutral');
       return;
     }
     
     // Analyze URL using our heuristic function
     const analysis = analyzeURL(tab.url);
+    console.log('Analysis result:', analysis);
     
     // Display result
     showPageResult(analysis);
@@ -62,7 +118,7 @@ async function analyzeCurrentPage() {
 }
 
 /**
- * Display page analysis result
+ * Display page analysis result with enhanced UI
  */
 function showPageResult(analysis) {
   const container = document.getElementById('currentPageAnalysis');
@@ -74,31 +130,39 @@ function showPageResult(analysis) {
   }
   
   // Full analysis result
-  let icon, statusText, statusClass;
+  let icon, statusText, statusClass, statusEmoji;
   
   if (analysis.risk === 'safe') {
     icon = '✅';
     statusText = 'Safe';
     statusClass = 'safe';
+    statusEmoji = '🟢';
   } else if (analysis.risk === 'suspicious') {
     icon = '⚠️';
     statusText = 'Suspicious';
     statusClass = 'suspicious';
+    statusEmoji = '🟡';
   } else {
     icon = '🚨';
     statusText = 'Dangerous';
     statusClass = 'danger';
+    statusEmoji = '🔴';
   }
   
+  // Create result with animation
   container.innerHTML = `
-    <div class="page-result">
+    <div class="page-result" style="animation: fadeIn 0.5s ease;">
       <div class="page-result-icon">${icon}</div>
       <div class="page-result-info">
-        <div class="page-result-status ${statusClass}">${statusText}</div>
+        <div class="page-result-status ${statusClass}">
+          ${statusEmoji} ${statusText}
+        </div>
         <div class="page-result-score">Risk Score: ${analysis.score}/100</div>
       </div>
     </div>
   `;
+  
+  console.log('✓ Page result displayed:', statusText, analysis.score);
 }
 
 /**
@@ -111,52 +175,66 @@ function analyzeURL(url) {
   try {
     const urlObj = new URL(url);
     
-    // URL length
+    // URL length check
     if (url.length > 75) {
       score += 10;
+      features.longURL = true;
     }
     
-    // IP address
+    // IP address check
     const ipPattern = /^https?:\/\/(\d{1,3}\.){3}\d{1,3}/;
     if (ipPattern.test(url)) {
       score += 30;
+      features.hasIP = true;
     }
     
-    // @ symbol
+    // @ symbol check
     if (url.includes('@')) {
       score += 20;
+      features.hasAtSymbol = true;
     }
     
     // Suspicious keywords
-    const keywords = ['verify', 'account', 'update', 'confirm', 'login', 'bank', 'secure'];
+    const keywords = [
+      'verify', 'account', 'update', 'confirm', 'login', 
+      'bank', 'secure', 'suspended', 'locked', 'unusual',
+      'paypal', 'amazon', 'apple', 'microsoft'
+    ];
+    
     let keywordCount = 0;
     keywords.forEach(k => {
       if (url.toLowerCase().includes(k)) keywordCount++;
     });
     score += keywordCount * 5;
+    features.suspiciousKeywords = keywordCount;
     
-    // Subdomains
+    // Subdomains check
     const subdomains = urlObj.hostname.split('.');
     if (subdomains.length > 3) {
       score += 15;
+      features.excessiveSubdomains = true;
     }
     
-    // HTTPS
+    // HTTPS check
     if (urlObj.protocol !== 'https:') {
       score += 20;
+      features.noHTTPS = true;
     }
     
+    // Cap at 100
     score = Math.min(score, 100);
     
+    // Determine risk level
     let risk;
     if (score < 30) risk = 'safe';
     else if (score < 60) risk = 'suspicious';
     else risk = 'danger';
     
-    return { score, risk };
+    return { score, risk, features };
     
   } catch (error) {
-    return { score: 50, risk: 'suspicious' };
+    console.error('Error in analyzeURL:', error);
+    return { score: 50, risk: 'suspicious', features: {} };
   }
 }
 
@@ -164,66 +242,117 @@ function analyzeURL(url) {
  * Setup event listeners for buttons
  */
 function setupEventListeners() {
+  console.log('Setting up event listeners...');
+  
   // Scan button
-  document.getElementById('scanButton').addEventListener('click', async () => {
-    const button = document.getElementById('scanButton');
-    const originalText = button.innerHTML;
+  const scanButton = document.getElementById('scanButton');
+  if (!scanButton) {
+    console.error('Scan button not found!');
+    return;
+  }
+  
+  scanButton.addEventListener('click', async () => {
+    console.log('Scan button clicked');
+    
+    const originalText = scanButton.innerHTML;
     
     // Show loading state
-    button.innerHTML = '⏳ Scanning...';
-    button.disabled = true;
+    scanButton.innerHTML = '⏳ Scanning...';
+    scanButton.disabled = true;
     
-    // Get current tab
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-    if (tab && tab.url) {
-      // Inject content script to scan the page
-      try {
+    try {
+      // Get current tab
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      
+      if (tab && tab.url) {
+        console.log('Injecting content script into tab:', tab.id);
+        
+        // Inject content script to scan the page
         await chrome.scripting.executeScript({
           target: { tabId: tab.id },
           files: ['content.js']
         });
         
+        // Show success feedback
+        scanButton.innerHTML = '✓ Scan Complete!';
+        
         // Re-analyze after a moment
         setTimeout(async () => {
           await analyzeCurrentPage();
-          button.innerHTML = originalText;
-          button.disabled = false;
-        }, 1000);
+          scanButton.innerHTML = originalText;
+          scanButton.disabled = false;
+        }, 1500);
         
-      } catch (error) {
-        console.error('Error scanning:', error);
-        button.innerHTML = '❌ Scan Failed';
-        setTimeout(() => {
-          button.innerHTML = originalText;
-          button.disabled = false;
-        }, 2000);
+        console.log('✓ Scan completed successfully');
+        
+      } else {
+        throw new Error('No valid tab found');
       }
+      
+    } catch (error) {
+      console.error('Error during scan:', error);
+      scanButton.innerHTML = '❌ Scan Failed';
+      
+      setTimeout(() => {
+        scanButton.innerHTML = originalText;
+        scanButton.disabled = false;
+      }, 2000);
     }
   });
   
   // Report button
-  document.getElementById('reportButton').addEventListener('click', async () => {
+  const reportButton = document.getElementById('reportButton');
+  if (!reportButton) {
+    console.error('Report button not found!');
+    return;
+  }
+  
+  reportButton.addEventListener('click', async () => {
+    console.log('Report button clicked');
+    
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
     if (tab && tab.url) {
-      const confirmed = confirm(`Report this site as phishing?\n\n${tab.url}`);
+      // Skip system pages
+      if (tab.url.startsWith('chrome://') || 
+          tab.url.startsWith('chrome-extension://') ||
+          tab.url.startsWith('edge://')) {
+        alert('Cannot report system pages');
+        return;
+      }
+      
+      const confirmed = confirm(
+        `⚠️ Report this site as phishing?\n\n` +
+        `URL: ${tab.url}\n\n` +
+        `This will help improve NoPhish detection.`
+      );
       
       if (confirmed) {
+        console.log('User confirmed report for:', tab.url);
+        
         // Send report to background
         chrome.runtime.sendMessage({
           action: 'reportThreat',
           url: tab.url,
           threatData: {
             reportedBy: 'user',
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            manualReport: true
           }
+        }).then(() => {
+          alert('✓ Thank you! This site has been reported.');
+          console.log('✓ Report submitted successfully');
+        }).catch(error => {
+          console.error('Error submitting report:', error);
+          alert('❌ Failed to submit report. Please try again.');
         });
-        
-        alert('Thank you! This site has been reported.');
       }
+    } else {
+      alert('No valid page to report');
     }
   });
+  
+  console.log('✓ Event listeners set up successfully');
 }
 
-console.log('Popup script initialized');
+console.log('Popup script initialized successfully');
