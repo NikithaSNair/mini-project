@@ -1,3 +1,27 @@
+import { extractDOMFeatures } from "./dom_analyzer.js";
+import { loadModel, predict, finalScore, classify } from "./ml_code.js";
+
+(async function () {
+
+    await loadModel();
+
+    const features = extractDOMFeatures();
+
+    const mlProbability = predict(features);
+
+    const heuristicScore = 50; // from heuristic module (replace later)
+
+    const score = finalScore(heuristicScore, mlProbability);
+
+    const label = classify(score);
+
+    console.log("Features:", features);
+    console.log("ML Probability:", mlProbability);
+    console.log("Final Score:", score);
+    console.log("Classification:", label);
+
+})();
+
 // content.js
 // This is Nikitha's primary working file!
 // Runs on Google search pages and all websites
