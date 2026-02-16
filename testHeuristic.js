@@ -1,4 +1,5 @@
-const { calculateRisk, getRiskLevel } = require('./heuristic');
+import { calculateRisk, getRiskLevel } from './heuristic.js';
+
 
 const testUrls = [
 
