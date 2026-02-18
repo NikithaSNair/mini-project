@@ -8,20 +8,6 @@
 
 ---
 
-## 📋 Table of Contents
-- [Overview](#overview)
-- [Features](#features)
-- [Team](#team)
-- [Installation](#installation)
-- [How It Works](#how-it-works)
-- [Project Structure](#project-structure)
-- [Technologies](#technologies)
-- [Testing](#testing)
-- [Screenshots](#screenshots)
-- [Academic Information](#academic-information)
-
----
-
 ## 🎯 Overview
 
 NoPhish is a browser extension that detects and warns users about phishing websites using a combination of heuristic analysis and machine learning simulation. The extension provides real-time protection by analyzing URLs and webpage content before users enter sensitive information.
