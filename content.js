@@ -1,11 +1,15 @@
 // content.js
 // Team NoPhish - Phishing Detection Extension
 // Main detection and UI logic
+import { extractDOMFeatures } from './extractDOMFeatures.js';  // Assuming your file structure
+import { loadModel, predict, finalScore, classify } from './ml.js';
+import { heuristic } from './heuristic.js';  // Or import calculateRisk directly
 
 console.log('NoPhish content script loaded!');
+console.log("NoPhish content script initialized!");
 
 // Detect if we're on Google search page
-const isGoogleSearchPage = window.location.href.includes('google.com/search');
+const isGoogleSearchPage = window.location.href.includes('google.com/search') || window.location.href.includes('google.co.in/search');
 
 if (isGoogleSearchPage) {
   console.log('Google search page detected - will inject indicators');
@@ -22,49 +26,59 @@ if (isGoogleSearchPage) {
 
 function initializeSearchPageMonitoring() {
   const observer = new MutationObserver(() => {
-    const searchResults = document.querySelectorAll('div.g');
-    if (searchResults.length > 0) {
-      console.log(`Found ${searchResults.length} search results`);
-      injectIndicatorsIntoSearchResults();
-      observer.disconnect();
-    }
+    injectIndicatorsIntoSearchResults();
   });
   
   observer.observe(document.body, { childList: true, subtree: true });
   setTimeout(() => injectIndicatorsIntoSearchResults(), 1000);
 }
 
-function injectIndicatorsIntoSearchResults() {
-  const searchResults = document.querySelectorAll('div.g');
-  console.log(`Processing ${searchResults.length} search results...`);
+async function injectIndicatorsIntoSearchResults() {
+  const containers = document.querySelectorAll('#rso .MjjYud');  // Updated to your working selector (~20)
+  if (containers.length === 0) {
+    console.log('No result containers found yet - retrying on mutation...');
+    return;
+  }
   
-  searchResults.forEach((result, index) => {
-    if (result.querySelector('.nophish-indicator')) return;
+  console.log(`Processing ${containers.length} search result containers...`);
+  
+  const analyzedLinks = [];  // For debug
+  containers.forEach((container, index) => {
+    if (container.querySelector('.nophish-indicator')) return;  // Skip if already injected
     
-    const linkElement = result.querySelector('a[href]');
+    const linkElement = container.querySelector('a[href^="https://"]:not([href*="google.com"])');  // Your tested query for clean external links
     if (!linkElement) return;
     
     const url = linkElement.href;
-    if (url.includes('google.com') || url.startsWith('#')) return;
+    analyzedLinks.push(url);
     
-    const titleElement = result.querySelector('h3');
+    const titleElement = container.querySelector('h3');
     if (!titleElement) return;
     
     console.log(`Analyzing URL ${index + 1}: ${url}`);
     
     try {
       const analysis = analyzeURL(url);
+      
+      // Optional: Integrate ML (uncomment if you want; uses search page DOM features)
+      // const features = extractDOMFeatures();
+      // const mlProb = predict(features);
+      // analysis.score = finalScore(analysis.score, mlProb);  // Combine heuristic + ML
+      // analysis.risk = classify(analysis.score);  // Update risk based on combined
+      
       const indicator = createIndicatorElement(analysis);
       
       titleElement.style.display = 'inline-flex';
       titleElement.style.alignItems = 'center';
       titleElement.insertBefore(indicator, titleElement.firstChild);
       
-      console.log(`✓ Indicator: ${analysis.risk} (${analysis.score})`);
+      console.log(`✓ Indicator for ${url}: ${analysis.risk} (${analysis.score})`);
     } catch (error) {
-      console.error(`Error:`, error);
+      console.error(`Error analyzing ${url}:`, error);
     }
   });
+  
+  console.log(`Found ${analyzedLinks.length} main links:`, analyzedLinks);  // Matches your test
 }
 
 function createIndicatorElement(analysis) {
@@ -256,7 +270,7 @@ function analyzeURL(url) {
     const suspiciousKeywords = [
       'verify', 'account', 'update', 'confirm', 'login', 
       'bank', 'secure', 'suspended', 'locked', 'unusual',
-      'paypal', 'amazon', 'apple', 'microsoft', 'netflix'
+      'amazon', 'apple', 'microsoft', 'netflix'  // Removed 'paypal' to avoid false positives on legit sites
     ];
     
     let keywordCount = 0;
@@ -403,4 +417,4 @@ function analyzeDOMThreats() {
   return { threats, threatScore, threatLevel };
 }
 
-console.log('NoPhish initialized!');
+console.log('NoPhish initialized!'); 
