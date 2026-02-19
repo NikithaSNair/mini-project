@@ -1,3 +1,4 @@
+import { loadModel, predict, finalScore, classify } from "./ml_model.js";
 // ----------------------------
 // Step 1: Placeholder Functions
 // ----------------------------
@@ -51,9 +52,40 @@ function heuristic(url) {
 }
 
 // Placeholder for Aparna's ML prediction function
-function mlPredict(url) {
-    console.log("ML Predict called for URL:", url);
-    return 0; // temporary score
+async function testPipeline(url) {
+
+    console.log("Pipeline started for URL:", url);
+
+    // Heuristic
+    const heuristicResult = heuristic(url);
+
+    // Load ML model
+    await loadModel();
+
+    // Features (temporary example)
+    const features = {
+        passwordFields: 1,
+        scripts: 10,
+        hiddenForms: 0
+    };
+
+    // ML Prediction
+    const mlProbability = predict(features);
+
+    // Final Score
+    const score = finalScore(heuristicResult.score, mlProbability);
+
+    // Classification
+    const label = classify(score);
+
+    const combinedScores = {
+        heuristic: heuristicResult,
+        mlProbability: mlProbability,
+        finalScore: score,
+        classification: label
+    };
+
+    displayIndicators(combinedScores);
 }
 
 // Placeholder for Nikita's display function
@@ -63,20 +95,10 @@ function displayIndicators(scores) {
 }
 
 // Function to simulate URL extraction and pipeline
-function testPipeline(url) {
-    console.log("Pipeline started for URL:", url);
 
-    const heuristicResult = heuristic(url);  // {score, risk}
-    const mlResult = mlPredict(url);         // {score, risk}
-
-    const combinedScores = {
-        heuristic: heuristicResult,
-        ml: mlResult
-    };
-
-    displayIndicators(combinedScores);
-}
 // Example test runs - this will trigger your pipeline for these URLs
-testPipeline("https://example.com");
-testPipeline("https://secure-login.bank.com/update");
-testPipeline("http://192.168.0.1/verify");
+(async () => {
+    await testPipeline("https://example.com");
+    await testPipeline("https://secure-login.bank.com/update");
+    await testPipeline("http://192.168.0.1/verify");
+})();
