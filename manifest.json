@@ -2,15 +2,11 @@
   "manifest_version": 3,
   "name": "NoPhish",
   "version": "1.0",
-<<<<<<< Updated upstream
   "description": "AI powered browser extension for detecting malicious scripts and phishing attempts.",
   
-=======
-  "description": "Ai powered browser extension for detecting malicious scripts and phishing attempts.",
->>>>>>> Stashed changes
   "action": {
     "default_popup": "index.html",
-    "default_icon": "logo.png"
+    "default_icon": "logo(1).png"
   },
   
   "icons": {
@@ -18,33 +14,11 @@
   },
   
   "permissions": [
-<<<<<<< Updated upstream
-    "storage",
-    "activeTab",
-    "scripting",
-    "tabs"
-  ],
-  
-  "host_permissions": [
-    "<all_urls>"
-  ],
-  
-  "content_scripts": [
-    {
-      "matches": ["*://www.google.com/search*", "*://www.google.co.in/search*"],
-      "js": ["content.js"],
-      "css": ["indicator.css"],
-      "run_at": "document_idle"
-    }
-  ],
-  
-  "background": {
-    "service_worker": "background.js"
-  }
-}
-=======
     "storage"
   ],
+  "background": {
+  "service_worker": "background.js"
+},
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
@@ -52,4 +26,3 @@
     }
   ]
 }
->>>>>>> Stashed changes
