@@ -1,6 +1,12 @@
 // content.js
 // Team NoPhish - Phishing Detection Extension
 // Main detection and UI logic
+<<<<<<< HEAD
+=======
+import { extractDOMFeatures } from './dom_analyzer.js';  // Assuming your file structure
+import { loadModel, predict, finalScore, classify } from './ml_model.js';
+import { heuristic } from './heuristic.js';  // Or import calculateRisk directly
+>>>>>>> 3f5c03a1831ef8415f75be7dcf3a723002b6af25
 
 console.log('NoPhish content script loaded!');
 console.log("NoPhish content script initialized!");

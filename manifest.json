@@ -6,6 +6,7 @@
   
   "action": {
     "default_popup": "index.html",
+<<<<<<< HEAD
     "default_icon": "icon.png"
   },
   
@@ -35,4 +36,25 @@
   "background": {
     "service_worker": "background.js"
   }
+=======
+    "default_icon": "logo(1).png"
+  },
+  
+  "icons": {
+    "128": "logo(1).png"
+  },
+  
+  "permissions": [
+    "storage"
+  ],
+  "background": {
+  "service_worker": "background.js"
+},
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+>>>>>>> 3f5c03a1831ef8415f75be7dcf3a723002b6af25
 }
