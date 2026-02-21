@@ -1,4 +1,4 @@
-import { loadModel, predict, finalScore, classify } from "./ml_model.js";
+
 // ----------------------------
 // Step 1: Placeholder Functions
 // ----------------------------
@@ -60,7 +60,7 @@ async function testPipeline(url) {
     const heuristicResult = heuristic(url);
 
     // Load ML model
-    await loadModel();
+    //await loadModel();
 
     // Features (temporary example)
     const features = {
@@ -70,20 +70,20 @@ async function testPipeline(url) {
     };
 
     // ML Prediction
-    const mlProbability = predict(features);
+    //const mlProbability = predict(features);
 
     // Final Score
-    const score = finalScore(heuristicResult.score, mlProbability);
+    //const score = finalScore(heuristicResult.score, mlProbability);
 
     // Classification
-    const label = classify(score);
+    //const label = classify(score);
 
     const combinedScores = {
-        heuristic: heuristicResult,
-        mlProbability: mlProbability,
-        finalScore: score,
-        classification: label
-    };
+    heuristic: heuristicResult,
+    mlProbability: 0,
+    finalScore: heuristicResult.score,
+    classification: heuristicResult.risk
+};
 
     displayIndicators(combinedScores);
 }
