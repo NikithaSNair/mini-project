@@ -1,39 +1,50 @@
-function extractDOMFeatures() {
+// DOM Analysis (Module 5)
+function analyzeDOM() {
+  let penalty = 0;
+  let reasons = [];
 
-    // -----------------------------
-    // Password Fields
-    // -----------------------------
-    const passwordFields = document.querySelectorAll("input[type='password']").length;
+  const passwordInputs = document.querySelectorAll('input[type="password"]');
+  if (passwordInputs.length > 0) {
+    if (window.location.protocol !== 'https:') {
+      penalty += 60;
+      reasons.push('Password field on insecure (HTTP) page');
+    } else {
+      penalty += 10;
+      reasons.push('Contains password field');
+    }
+  }
 
-    // -----------------------------
-    // Scripts (external + inline)
-    // -----------------------------
-    const externalScripts = document.querySelectorAll("script[src]").length;
-    const inlineScripts = [...document.querySelectorAll("script")]
-        .filter(script => !script.src).length;
+  const forms = document.querySelectorAll('form');
+  let hiddenForms = 0;
+  forms.forEach(form => {
+    const style = window.getComputedStyle(form);
+    if (style.display === 'none' || style.opacity === '0' || style.visibility === 'hidden') {
+      hiddenForms++;
+    }
+  });
 
-    const scripts = externalScripts + inlineScripts;
+  if (hiddenForms > 0) {
+    penalty += 20;
+    reasons.push(`Found ${hiddenForms} hidden form(s)`);
+  }
 
-    // -----------------------------
-    // Hidden Forms Detection
-    // -----------------------------
-    const hiddenForms = [...document.forms].filter(form => {
-        const style = window.getComputedStyle(form);
-        return (
-            style.display === "none" ||
-            style.visibility === "hidden" ||
-            style.opacity === "0"
-        );
-    }).length;
+  const scripts = document.querySelectorAll('script[src]');
+  let externalScripts = 0;
+  scripts.forEach(script => {
+    try {
+      const srcUrl = new URL(script.src);
+      if (srcUrl.hostname !== window.location.hostname) {
+        externalScripts++;
+      }
+    } catch (e) {}
+  });
 
-    // -----------------------------
-    // Normalize Values (Optional but Recommended)
-    // -----------------------------
-    const normalizedFeatures = {
-        passwordFields: Math.min(passwordFields, 10),
-        scripts: Math.min(scripts, 50),
-        hiddenForms: Math.min(hiddenForms, 10)
-    };
+  if (externalScripts > 15) {
+    penalty += 10;
+    reasons.push(`High number of external scripts (${externalScripts})`);
+  }
 
-    return normalizedFeatures;
+  return { penalty, reasons };
 }
+
+window.NoPhishDOM = { analyzeDOM };
