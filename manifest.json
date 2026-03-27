@@ -1,60 +1,31 @@
 {
   "manifest_version": 3,
   "name": "NoPhish",
-  "version": "1.0",
-  "description": "AI powered browser extension for detecting malicious scripts and phishing attempts.",
-  
-  "action": {
-    "default_popup": "index.html",
-<<<<<<< HEAD
-    "default_icon": "icon.png"
-  },
-  
-  "icons": {
-    "128": "icon.png"
-  },
-  
-  "permissions": [
-    "storage",
-    "activeTab",
-    "scripting",
-    "tabs"
-  ],
-  
+  "version": "1.2.0",
+  "description": "Detects phishing using Heuristics, Random Forest AI, and DOM analysis.",
+  "permissions": ["storage", "tabs", "activeTab", "scripting"],
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "https://nophish-backend.onrender.com/*"
   ],
-  
-  "content_scripts": [
-  {
-    "matches": ["<all_urls>"],
-    "js": ["dom_analyzer.js", "pipeline.js", "content.js"],
-    "css": ["indicator.css"],
-    "run_at": "document_idle"
-  }
-],
+  "action": {
+    "default_title": "NoPhish",
+    "default_popup": "popup.html"
+  },
   "background": {
     "service_worker": "background.js"
-  }
-=======
-    "default_icon": "logo(1).png"
   },
-  
-  "icons": {
-    "128": "logo(1).png"
-  },
-  
-  "permissions": [
-    "storage"
-  ],
-  "background": {
-  "service_worker": "background.js"
-},
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "css": ["indicator.css"],
+      "js": [
+        "heuristic.js",
+        "random_forest.js",
+        "dom_analyzer.js",
+        "content.js"
+      ],
+      "run_at": "document_end"
     }
   ]
->>>>>>> 3f5c03a1831ef8415f75be7dcf3a723002b6af25
 }
