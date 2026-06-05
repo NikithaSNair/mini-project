@@ -2,22 +2,24 @@
 let currentAnalysis = null;
 
 async function getCombinedSafetyScore(urlStr) {
-  const heuristicResult = window.NoPhishHeuristic.calculateRisk(urlStr);
-  
+  // 1. STRICT WHITELIST OVERRIDE (Short-Circuit)
   // If it's a trusted domain, skip ML and DOM penalties to avoid false positives
-  const isTrusted = heuristicResult.reasons.includes('Trusted domain (Heuristic)');
-  
-  let mlResult = { penalty: 0, reasons: [] };
-  let domResult = { penalty: 0, reasons: [] };
-  
-  if (!isTrusted) {
-    mlResult = await window.NoPhishCloudAI.analyzeWithCloudAI(urlStr);
-    domResult = window.NoPhishDOM.analyzeDOM();
+  if (window.NoPhishHeuristic && window.NoPhishHeuristic.isWhitelisted(urlStr)) {
+    currentAnalysis = { 
+      score: 99, 
+      risk: 'safe', 
+      reasons: ['Verified Trusted Domain (Whitelist Bypass)'] 
+    };
+    return currentAnalysis;
   }
 
+  // 2. IF NOT WHITELISTED, RUN ALL 3 ENGINES
+  const heuristicResult = window.NoPhishHeuristic.calculateRisk(urlStr);
+  const mlResult = await window.NoPhishCloudAI.analyzeWithCloudAI(urlStr);
+  const domResult = window.NoPhishDOM.analyzeDOM();
+  
   // We no longer reduce DOM penalties based on URL safety. 
   // If the pre-navigation missed a clever phishing URL, the DOM analysis MUST stand on its own to catch it.
-  
   const totalPenalty = heuristicResult.penalty + mlResult.penalty + domResult.penalty;
   const allReasons = [...heuristicResult.reasons, ...mlResult.reasons, ...domResult.reasons];
 
@@ -54,25 +56,29 @@ async function injectSearchIndicators() {
     if (link.hasAttribute('data-nophish-checked')) continue;
     link.setAttribute('data-nophish-checked', 'true');
 
-    // For search results, we only use Heuristic + ML (Pre-navigation)
-    const heuristicResult = window.NoPhishHeuristic.calculateRisk(link.href);
-    const isTrusted = heuristicResult.reasons.includes('Trusted domain (Heuristic)');
-    
-    let mlResult = { penalty: 0, reasons: [] };
-    if (!isTrusted) {
-      mlResult = await window.NoPhishCloudAI.analyzeWithCloudAI(link.href);
-    }
-    
-    const penalty = heuristicResult.penalty + mlResult.penalty;
-    let safetyScore = Math.min(99, Math.max(0, 100 - penalty));
-    
+    let safetyScore = 99;
     let risk = 'safe';
-    if (safetyScore < 50) risk = 'danger';
-    else if (safetyScore < 80) risk = 'warning';
+    let reasons = [];
+
+    // 1. STRICT WHITELIST OVERRIDE FOR SEARCH RESULTS
+    if (window.NoPhishHeuristic && window.NoPhishHeuristic.isWhitelisted(link.href)) {
+      reasons = ['Verified Trusted Domain'];
+    } else {
+      // 2. IF NOT WHITELISTED, RUN HEURISTIC + ML (Pre-navigation)
+      const heuristicResult = window.NoPhishHeuristic.calculateRisk(link.href);
+      const mlResult = await window.NoPhishCloudAI.analyzeWithCloudAI(link.href);
+      
+      const penalty = heuristicResult.penalty + mlResult.penalty;
+      safetyScore = Math.min(99, Math.max(0, 100 - penalty));
+      reasons = [...heuristicResult.reasons, ...mlResult.reasons];
+      
+      if (safetyScore < 50) risk = 'danger';
+      else if (safetyScore < 80) risk = 'warning';
+    }
     
     const dot = document.createElement('span');
     dot.className = `nophish-score-badge nophish-${risk}`;
-    dot.title = `NoPhish Safety Score: ${safetyScore}/100\n${[...heuristicResult.reasons, ...mlResult.reasons].join(', ')}`;
+    dot.title = `NoPhish Safety Score: ${safetyScore}/100\n${reasons.join(', ')}`;
     
     if (risk === 'danger') {
       dot.innerHTML = '🔴';
