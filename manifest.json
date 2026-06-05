@@ -13,7 +13,8 @@
   "permissions": ["storage", "tabs", "activeTab", "scripting"],
   "host_permissions": [
     "<all_urls>",
-    "https://nophish-backend.onrender.com/*"
+    "https://no-phish.onrender.com/*",
+    "https://*.google.com/*"
   ],
   
   "action": {
