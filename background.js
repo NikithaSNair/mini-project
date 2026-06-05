@@ -7,7 +7,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log("Background script received request to analyze:", request.url);
 
     // The background script talks to the Render Cloud server
-    fetch("https://nophish-backend.onrender.com/analyze", {
+    fetch("https://no-phish.onrender.com/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ websiteUrl: request.url })
